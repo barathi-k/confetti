@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .fireworks-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        .firework {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .firework::before,
+        .firework::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background-color: inherit;
+            opacity: inherit;
+        }
+
+        @keyframes firework-animation {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        @keyframes particle-animation {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+    </style>
+    <title>Fireworks</title>
+</head>
+
+<body>
+    <div class="fireworks-container js-fireworks-container"></div>
+
+    <script>
+        const Fireworks = function (el) {
+            this.el = el;
+            this.containerEl = null;
+
+            this.fireworkColors = ['#ff4b4b', '#f9ff4b', '#4bff4b', '#4b7bff', '#ff4bff'];
+            this._setupElements();
+            this._renderFireworks();
+        };
+
+        Fireworks.prototype._setupElements = function () {
+            const containerEl = document.createElement('div');
+            const elPosition = this.el.style.position;
+
+            if (elPosition !== 'relative' || elPosition !== 'absolute') {
+                this.el.style.position = 'relative';
+            }
+
+            containerEl.classList.add('fireworks-container');
+
+            this.el.appendChild(containerEl);
+
+            this.containerEl = containerEl;
+        };
+
+        Fireworks.prototype._createParticle = function (x, y, color, delay) {
+            const particleEl = document.createElement('div');
+            particleEl.classList.add('firework');
+            particleEl.style.left = `${x}px`;
+            particleEl.style.top = `${y}px`;
+            particleEl.style.backgroundColor = color;
+            particleEl.style.animation = `particle-animation 1s ${delay}s forwards`;
+
+            particleEl.removeTimeout = setTimeout(function () {
+                particleEl.parentNode.removeChild(particleEl);
+            }, 2000);
+
+            this.containerEl.appendChild(particleEl);
+        };
+
+        Fireworks.prototype._explodeFirework = function (x, y, color) {
+            const numParticles = 30;
+            for (let i = 0; i < numParticles; i++) {
+                const delay = Math.random() * 0.5;
+                this._createParticle(x, y, color, delay);
+            }
+        };
+
+        Fireworks.prototype._renderFireworks = function () {
+            this.fireworkInterval = setInterval(() => {
+                const fireworkEl = document.createElement('div');
+                fireworkEl.classList.add('firework');
+                const fireworkLeft = Math.floor(Math.random() * this.el.offsetWidth);
+                const fireworkTop = Math.floor(Math.random() * this.el.offsetHeight / 2) + this.el.offsetHeight / 2;
+                const fireworkColor = this.fireworkColors[Math.floor(Math.random() * this.fireworkColors.length)];
+
+                fireworkEl.style.left = `${fireworkLeft}px`;
+                fireworkEl.style.top = `${fireworkTop}px`;
+                fireworkEl.style.backgroundColor = fireworkColor;
+                fireworkEl.style.animation = 'firework-animation 1s forwards';
+
+                this.containerEl.appendChild(fireworkEl);
+
+                setTimeout(() => {
+                    const rect = fireworkEl.getBoundingClientRect();
+                    this._explodeFirework(rect.left, rect.top, fireworkColor);
+                    fireworkEl.parentNode.removeChild(fireworkEl);
+                }, 1000);
+            }, 1000);
+
+            // Stop fireworks generation after 2 seconds
+            setTimeout(() => {
+                clearInterval(this.fireworkInterval);
+            }, 2000);
+        };
+
+        window.fireworks = new Fireworks(document.querySelector('.js-fireworks-container'));
+    </script>
+</body>
+
+</html>
